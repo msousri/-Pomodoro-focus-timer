@@ -2,7 +2,6 @@
 
 A Pomodoro timer built around a simple idea: focus should feel like growth, not just a countdown.
 
-**Live demo:** (add your GitHub Pages link here once deployed)
 
 ## Concept
 
