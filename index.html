@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Bloom — Focus Timer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --white: #FFFFFF;
+    --lav-50: #F8F5FF;
+    --lav-100: #EFE7FC;
+    --lav-200: #DCC9F9;
+    --purple-300: #C6A6F5;
+    --purple-500: #7C4DFF;
+    --purple-600: #6A34F0;
+    --purple-700: #5525C4;
+    --ink: #2B1B4D;
+    --ink-dim: #7A6C99;
+  }
+
+  *{ box-sizing: border-box; }
+
+  body{
+    margin:0;
+    min-height: 100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background: var(--white);
+    background-image: radial-gradient(circle at 85% 8%, var(--lav-100) 0%, transparent 45%),
+                       radial-gradient(circle at 8% 95%, var(--lav-50) 0%, transparent 40%);
+    font-family: 'Inter', sans-serif;
+    color: var(--ink);
+    padding: 32px 16px;
+  }
+
+  .card{
+    width: 380px;
+    max-width: 100%;
+    background: var(--white);
+    border: 1px solid var(--lav-100);
+    border-radius: 28px;
+    padding: 28px 26px 24px;
+    box-shadow: 0 30px 60px -25px rgba(124, 77, 255, 0.28);
+  }
+
+  .top-row{
+    display:flex;
+    align-items:baseline;
+    justify-content: space-between;
+    margin-bottom: 22px;
+  }
+  .top-row h1{
+    font-family:'Fraunces', serif;
+    font-style: italic;
+    font-weight: 600;
+    font-size: 22px;
+    margin: 0;
+    color: var(--purple-700);
+  }
+  .top-row .streak{
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    font-weight: 600;
+  }
+
+  .tabs{
+    display:flex;
+    background: var(--lav-50);
+    border-radius: 999px;
+    padding: 4px;
+    gap: 4px;
+    margin-bottom: 26px;
+  }
+  .tab{
+    flex:1;
+    border:none;
+    background: transparent;
+    padding: 9px 6px;
+    border-radius: 999px;
+    font-family:'Inter', sans-serif;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink-dim);
+    cursor:pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+  }
+  .tab.active{
+    background: var(--white);
+    color: var(--purple-700);
+    box-shadow: 0 4px 12px -4px rgba(124,77,255,0.35);
+  }
+
+  .ring-wrap{
+    position: relative;
+    width: 224px;
+    height: 224px;
+    margin: 0 auto 6px;
+  }
+  .ring{
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: conic-gradient(var(--purple-500) var(--deg, 0deg), var(--lav-100) 0deg);
+    -webkit-mask: radial-gradient(closest-side, transparent 76%, black 77%);
+    mask: radial-gradient(closest-side, transparent 76%, black 77%);
+    transition: background 0.25s linear;
+  }
+  .ring-center{
+    position:absolute;
+    inset: 0;
+    display:flex;
+    flex-direction: column;
+    align-items:center;
+    justify-content:center;
+    gap: 2px;
+  }
+  .time{
+    font-family: 'Inter', sans-serif;
+    font-variant-numeric: tabular-nums;
+    font-size: 46px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+  .phase-label{
+    font-size: 11px;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--purple-500);
+  }
+
+  .flower-wrap{
+    display:flex;
+    justify-content:center;
+    margin: 10px 0 18px;
+  }
+  .flower{ width: 54px; height: 54px; overflow: visible; }
+  .petal{
+    opacity: 0.14;
+    transform-origin: 27px 27px;
+    transition: opacity 0.7s ease;
+    fill: var(--purple-500);
+  }
+  .flower-center{ fill: var(--purple-700); }
+
+  .steppers{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap: 14px;
+    margin-bottom: 22px;
+  }
+  .stepper-btn{
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    border: 1px solid var(--lav-200);
+    background: var(--white);
+    color: var(--purple-600);
+    font-size: 15px;
+    line-height: 1;
+    cursor: pointer;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .stepper-btn:hover{ background: var(--lav-50); }
+  .stepper-label{
+    font-size: 12px;
+    color: var(--ink-dim);
+    min-width: 78px;
+    text-align:center;
+  }
+
+  .controls{
+    display:flex;
+    gap: 10px;
+  }
+  .btn{
+    flex:1;
+    border:none;
+    border-radius: 14px;
+    padding: 13px 0;
+    font-family:'Inter', sans-serif;
+    font-size: 14.5px;
+    font-weight: 700;
+    cursor:pointer;
+    transition: transform 0.06s ease, box-shadow 0.06s ease, opacity 0.15s ease;
+  }
+  .btn:active{ transform: translateY(2px); }
+  .btn-primary{
+    background: linear-gradient(180deg, var(--purple-500), var(--purple-700));
+    color: var(--white);
+    box-shadow: 0 10px 20px -8px rgba(124,77,255,0.55);
+  }
+  .btn-ghost{
+    background: var(--lav-50);
+    color: var(--purple-700);
+  }
+  .btn-ghost:hover{ background: var(--lav-100); }
+
+  .garden{
+    margin-top: 22px;
+    padding-top: 16px;
+    border-top: 1px dashed var(--lav-200);
+  }
+  .garden-label{
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+  .garden-row{
+    display:flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-height: 20px;
+  }
+  .bloom-dot{
+    width: 18px; height: 18px;
+  }
+  .garden-empty{
+    font-size: 12px;
+    color: var(--ink-dim);
+    font-style: italic;
+  }
+
+  .credit{
+    text-align:center;
+    margin-top: 20px;
+    font-size: 11px;
+    letter-spacing: 0.03em;
+    color: var(--ink-dim);
+  }
+  .credit b{ color: var(--purple-600); }
+
+  @media (prefers-reduced-motion: reduce){
+    .ring{ transition:none; }
+    .petal{ transition:none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="top-row">
+    <h1>Bloom</h1>
+    <span class="streak" id="streakLabel">0 today</span>
+  </div>
+
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-mode="focus">Focus</button>
+    <button class="tab" data-mode="short">Short Break</button>
+    <button class="tab" data-mode="long">Long Break</button>
+  </div>
+
+  <div class="ring-wrap">
+    <div class="ring" id="ring"></div>
+    <div class="ring-center">
+      <div class="time" id="time">25:00</div>
+      <div class="phase-label" id="phaseLabel">Focus</div>
+    </div>
+  </div>
+
+  <div class="flower-wrap">
+    <svg class="flower" viewBox="0 0 54 54" id="flower">
+      <g>
+        <ellipse class="petal" data-i="1" cx="27" cy="12" rx="7" ry="12"></ellipse>
+        <ellipse class="petal" data-i="2" cx="42" cy="20" rx="7" ry="12" transform="rotate(72 27 27)"></ellipse>
+        <ellipse class="petal" data-i="3" cx="37" cy="40" rx="7" ry="12" transform="rotate(144 27 27)"></ellipse>
+        <ellipse class="petal" data-i="4" cx="17" cy="40" rx="7" ry="12" transform="rotate(216 27 27)"></ellipse>
+        <ellipse class="petal" data-i="5" cx="12" cy="20" rx="7" ry="12" transform="rotate(288 27 27)"></ellipse>
+        <circle class="flower-center" cx="27" cy="27" r="6"></circle>
+      </g>
+    </svg>
+  </div>
+
+  <div class="steppers" id="steppers">
+    <button class="stepper-btn" id="minus">−</button>
+    <span class="stepper-label" id="durationLabel">25 min focus</span>
+    <button class="stepper-btn" id="plus">+</button>
+  </div>
+
+  <div class="controls">
+    <button class="btn btn-primary" id="startPause">Start</button>
+    <button class="btn btn-ghost" id="reset">Reset</button>
+  </div>
+
+  <div class="garden">
+    <div class="garden-label">Today's garden</div>
+    <div class="garden-row" id="gardenRow">
+      <span class="garden-empty">No blooms yet — finish a focus session to plant one.</span>
+    </div>
+  </div>
+
+  <div class="credit">Developed by <b>Sourish</b> :)</div>
+</div>
+
+<script>
+(function(){
+  const DURATIONS = { focus: 25, short: 5, long: 15 };
+  const LABELS = { focus: 'Focus', short: 'Short Break', long: 'Long Break' };
+
+  let mode = 'focus';
+  let durationMin = { ...DURATIONS };
+  let remaining = durationMin[mode] * 60;
+  let total = remaining;
+  let running = false;
+  let timerId = null;
+  let completedToday = 0;
+  let focusCyclesCompleted = 0;
+
+  const timeEl = document.getElementById('time');
+  const ringEl = document.getElementById('ring');
+  const phaseLabelEl = document.getElementById('phaseLabel');
+  const startPauseBtn = document.getElementById('startPause');
+  const resetBtn = document.getElementById('reset');
+  const tabs = document.querySelectorAll('.tab');
+  const petals = document.querySelectorAll('.petal');
+  const streakLabel = document.getElementById('streakLabel');
+  const durationLabel = document.getElementById('durationLabel');
+  const minusBtn = document.getElementById('minus');
+  const plusBtn = document.getElementById('plus');
+  const gardenRow = document.getElementById('gardenRow');
+
+  function formatTime(sec){
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+  }
+
+  function render(){
+    timeEl.textContent = formatTime(remaining);
+    phaseLabelEl.textContent = LABELS[mode];
+    const pct = 1 - (remaining / total);
+    ringEl.style.setProperty('--deg', (pct * 360) + 'deg');
+    const stage = Math.min(5, Math.floor(pct * 5.001));
+    petals.forEach(p => {
+      const i = parseInt(p.dataset.i, 10);
+      p.style.opacity = i <= stage ? 1 : 0.14;
+    });
+    durationLabel.textContent = durationMin[mode] + ' min ' + (mode === 'focus' ? 'focus' : 'break');
+    startPauseBtn.textContent = running ? 'Pause' : (remaining === total ? 'Start' : 'Resume');
+    streakLabel.textContent = completedToday + (completedToday === 1 ? ' bloom today' : ' blooms today');
+  }
+
+  function switchMode(newMode, resetTimer){
+    mode = newMode;
+    tabs.forEach(t => t.classList.toggle('active', t.dataset.mode === newMode));
+    if (resetTimer){
+      remaining = durationMin[mode] * 60;
+      total = remaining;
+    }
+    render();
+  }
+
+  function playChime(){
+    try{
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const notes = [660, 880];
+      notes.forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.15, ctx.currentTime + idx * 0.18 + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + idx * 0.18 + 0.5);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(ctx.currentTime + idx * 0.18);
+        osc.stop(ctx.currentTime + idx * 0.18 + 0.55);
+      });
+    } catch(e){ /* audio unavailable, ignore */ }
+  }
+
+  function addBloomToGarden(){
+    const empty = gardenRow.querySelector('.garden-empty');
+    if (empty) empty.remove();
+    const svgns = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(svgns, 'svg');
+    svg.setAttribute('class', 'bloom-dot');
+    svg.setAttribute('viewBox', '0 0 54 54');
+    svg.innerHTML = `
+      <g>
+        <ellipse cx="27" cy="12" rx="7" ry="12" fill="#7C4DFF"></ellipse>
+        <ellipse cx="42" cy="20" rx="7" ry="12" fill="#7C4DFF" transform="rotate(72 27 27)"></ellipse>
+        <ellipse cx="37" cy="40" rx="7" ry="12" fill="#7C4DFF" transform="rotate(144 27 27)"></ellipse>
+        <ellipse cx="17" cy="40" rx="7" ry="12" fill="#7C4DFF" transform="rotate(216 27 27)"></ellipse>
+        <ellipse cx="12" cy="20" rx="7" ry="12" fill="#7C4DFF" transform="rotate(288 27 27)"></ellipse>
+        <circle cx="27" cy="27" r="6" fill="#5525C4"></circle>
+      </g>`;
+    gardenRow.appendChild(svg);
+  }
+
+  function tick(){
+    remaining--;
+    if (remaining <= 0){
+      clearInterval(timerId);
+      running = false;
+      playChime();
+      if (mode === 'focus'){
+        completedToday++;
+        focusCyclesCompleted++;
+        addBloomToGarden();
+        const nextMode = (focusCyclesCompleted % 4 === 0) ? 'long' : 'short';
+        switchMode(nextMode, true);
+      } else {
+        switchMode('focus', true);
+      }
+      render();
+      return;
+    }
+    render();
+  }
+
+  function start(){
+    if (running) return;
+    running = true;
+    timerId = setInterval(tick, 1000);
+    render();
+  }
+
+  function pause(){
+    running = false;
+    clearInterval(timerId);
+    render();
+  }
+
+  function reset(){
+    running = false;
+    clearInterval(timerId);
+    remaining = durationMin[mode] * 60;
+    total = remaining;
+    render();
+  }
+
+  startPauseBtn.addEventListener('click', () => {
+    if (running) pause(); else start();
+  });
+  resetBtn.addEventListener('click', reset);
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      if (running) pause();
+      switchMode(tab.dataset.mode, true);
+    });
+  });
+
+  minusBtn.addEventListener('click', () => {
+    if (running || remaining !== total) return;
+    durationMin[mode] = Math.max(1, durationMin[mode] - 1);
+    remaining = durationMin[mode] * 60;
+    total = remaining;
+    render();
+  });
+  plusBtn.addEventListener('click', () => {
+    if (running || remaining !== total) return;
+    durationMin[mode] = Math.min(90, durationMin[mode] + 1);
+    remaining = durationMin[mode] * 60;
+    total = remaining;
+    render();
+  });
+
+  render();
+})();
+</script>
+
+</body>
+</html>
